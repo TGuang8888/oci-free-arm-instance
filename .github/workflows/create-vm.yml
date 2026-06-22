@@ -51,6 +51,16 @@ jobs:
           echo "region=${{ env.OCI_CLI_REGION }}" >> ~/.oci/config
           echo "${{ secrets.SSH_PUBLIC_KEY }}" > /home/runner/my_ssh_key.pub
 
+          # Auto-find the latest Ubuntu 22.04 image that supports A1.Flex (Arm) in THIS region
+          IMAGE_ID=$(oci compute image list \
+            --compartment-id "$COMPARTMENT_ID" \
+            --operating-system "Canonical Ubuntu" \
+            --operating-system-version "22.04" \
+            --shape "VM.Standard.A1.Flex" \
+            --sort-by TIMECREATED \
+            --query 'data[0].id' --raw-output)
+          echo "Resolved IMAGE_ID for this region: $IMAGE_ID"
+          
           # Run the command, capture ALL output, and use '|| true' to prevent the script from exiting early.
           OCI_OUTPUT=$(oci compute instance launch \
             --compartment-id "$COMPARTMENT_ID" \
